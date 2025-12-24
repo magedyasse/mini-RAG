@@ -24,5 +24,48 @@ mini-RAG is a minimal implementation of Retrieval-Augmented Generation (RAG) usi
 4. Install required packages:
    ```bash
     pip install -r requirements.txt
-    ``` 
+    ```
+
+
+### (Optional) Setup command line prompt for better readability
+
+Command:
+export PS1="\[\033[01;32m\]\u@\h:\w\n\[\033[00m\]\$ "
+
+What it does:
+Shows username, hostname, and current directory in green with a new line before the prompt.
+
+---
+
+Command:
+export PS1="\[\033[34m\]\u@\h\[\033[00m\]:\w\$ "
+
+What it does:
+Displays username and hostname in blue followed by the current directory.
+
+---
+
+Command:
+export PS1="\[\033[33m\][\t]\[\033[00m\] \w \$ "
+
+What it does:
+Adds the current time before the working directory.
+
+---
+
+Command:
+export PS1="\w \$ "
+
+What it does:
+Minimal prompt showing only the current directory and the `$` symbol.
+
+---
+
+Command:
+export PS1="\[\033[31m\]\u@\h:\w\$ \[\033[00m\]"
+
+What it does:
+Shows the prompt in red, useful as a warning style when working with sensitive commands.
+
+
      
