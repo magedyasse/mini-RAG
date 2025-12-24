@@ -81,3 +81,12 @@ cp .env.example .env
 Then, edit the `.env` file to add your OpenAI API key and other configurations.
 
      
+## Run the API server:
+
+```bash
+$ uvicorn main:app --reload --host 0.0.0.0 --port 5000     
+```
+
+## POSTMAN Collection
+Download the Postman collection from [here](assets\mini-rag-app.postman_collection.json)
+and import it into your Postman application to test the API endpoints.
