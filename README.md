@@ -67,5 +67,17 @@ export PS1="\[\033[31m\]\u@\h:\w\$ \[\033[00m\]"
 What it does:
 Shows the prompt in red, useful as a warning style when working with sensitive commands.
 
+## Installation
+
+### Clone the repository:
+
+```bash
+$ pip install -r requirements.txt
+```
+### Set up environment variables:
+```
+cp .env.example .env
+```
+Then, edit the `.env` file to add your OpenAI API key and other configurations.
 
      
