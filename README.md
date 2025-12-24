@@ -1,0 +1,2 @@
+# mini-RAG
+Training Project
