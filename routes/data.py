@@ -5,10 +5,10 @@ from helper.config import get_settings , Settings
 from controllers import DataController , ProjectController
 from models import ResponseSignal
 from fastapi.responses import JSONResponse
-from logging import logger
+import logging 
 
 
-logger = logger.getLogger("uvicorn.error")
+logger = logging.getLogger("uvicorn.error")
 
 data_router = APIRouter(
     prefix="/api/v1/data",
@@ -33,7 +33,7 @@ async def upload_data(project_id: str, file: UploadFile ,
 
         # Get project path
         project_dir_path = ProjectController().get_project_path(project_id=project_id)
-        file_path = data_controller.generate_unique_filename(
+        file_path, file_id = data_controller.generate_unique_filepath(
             original_filename=file.filename ,
             project_id=project_id
         )
@@ -43,7 +43,7 @@ async def upload_data(project_id: str, file: UploadFile ,
                 while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):  # Read file in chunks
                     await f.write(chunk)
         except Exception as e:   
-             
+            
             logger.error(f"File upload failed: {e}")
             return JSONResponse(
                     status_code= status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -55,8 +55,11 @@ async def upload_data(project_id: str, file: UploadFile ,
                 status_code= status.HTTP_200_OK,
                 content={
                     "message": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
-                    "file_path": file_path
-                }             
+                    "file_path": file_path,
+                    "file_id": file_id
+
+                }  
+            )           
 
 
 
