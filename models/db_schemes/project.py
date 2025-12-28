@@ -1,11 +1,11 @@
 from pydantic import BaseModel , Field , validator
 from typing import Optional
-from bso.objectid import ObjectId
+from bson.objectid import ObjectId
 
 class ProjectDBScheme(BaseModel):
 
-    _id : Optional[ObjectId]
-    project_id : str =  Field(... , min_length=3 , max_length=20)
+    id : Optional[ObjectId] = Field(None , alias="_id")
+    project_id : str =  Field(... , min_length=1)
 
 
     @validator("project_id")
