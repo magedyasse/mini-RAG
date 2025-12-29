@@ -3,10 +3,32 @@ from .db_schemes import  ProjectDBScheme
 from .enums.DataBaseEnum import DataBaseEnum
 
 class ProjectModel(BaseDataModel):
+
     def __init__(self , db_client:object) :
 
         super().__init__(db_client=db_client)
         self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
+
+    # this as i can't be async __init__   
+    @classmethod
+    async def create_instance(cls , db_client:object) :
+        instance = cls(db_client=db_client)
+        await instance.initialize_collection()
+        return instance
+
+    async def initialize_collection(self) :
+      all_collections = await self.db_client.list_collection_names()
+      if DataBaseEnum.COLLECTION_PROJECT_NAME.value not in all_collections:
+
+          self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
+        #   await self.db_client.create_collection(DataBaseEnum.COLLECTION_PROJECT_NAME.value)
+          indexes = ProjectDBScheme.get_indexes()
+          for index in indexes:
+              await self.collection.create_index(
+                 index["key"],
+                 name=index["name"], 
+                 unique=index["unique"]
+                )
 
 
     async def create_project(self , project : ProjectDBScheme) :
