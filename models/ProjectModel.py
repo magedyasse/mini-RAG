@@ -1,17 +1,18 @@
 from .BaseDataModel import BaseDataModel
 from .db_schemes import  ProjectDBScheme
 from .enums.DataBaseEnum import DataBaseEnum
+from typing import Any
 
 class ProjectModel(BaseDataModel):
 
-    def __init__(self , db_client:object) :
+    def __init__(self , db_client: Any) :
 
         super().__init__(db_client=db_client)
         self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECT_NAME.value]
 
     # this as i can't be async __init__   
     @classmethod
-    async def create_instance(cls , db_client:object) :
+    async def create_instance(cls , db_client: Any) :
         instance = cls(db_client=db_client)
         await instance.initialize_collection()
         return instance

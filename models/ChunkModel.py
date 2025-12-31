@@ -3,16 +3,17 @@ from .db_schemes import  DataChunk
 from .enums.DataBaseEnum import DataBaseEnum
 from bson.objectid import ObjectId
 from pymongo import InsertOne
+from typing import Any, Optional
 
 class ChunkModel(BaseDataModel):
 
-    def __init__(self , db_client:object) :
+    def __init__(self , db_client: Any) :
 
         super().__init__(db_client=db_client)
         self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNK_NAME.value]
 
     @classmethod
-    async def create_instance(cls , db_client:object) :
+    async def create_instance(cls , db_client: Any) :
         instance = cls(db_client=db_client)
         await instance.initialize_collection()
         return instance    

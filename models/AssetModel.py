@@ -3,18 +3,19 @@ from .db_schemes import  Asset
 from .enums.DataBaseEnum import DataBaseEnum
 from bson.objectid import ObjectId
 from pymongo import InsertOne
+from typing import Any, Optional
 
 
 
 class AssetModel(BaseDataModel):
 
-    def __init__(self, db_client):
+    def __init__(self, db_client: Any):
         super().__init__(db_client=db_client )
         self.collection = self.db_client[DataBaseEnum.COLLECTION_ASSET_NAME.value]
 
 
     @classmethod
-    async def create_instance(cls , db_client:object) :
+    async def create_instance(cls , db_client: Any) :
         instance = cls(db_client=db_client)
         await instance.initialize_collection()
         return instance    
@@ -39,15 +40,16 @@ class AssetModel(BaseDataModel):
                 
         return asset      
 
-    async def get_all_project_assets(self , asset_project_id:str) :    
+    async def get_all_project_assets(self , asset_project_id:str, asset_type: Optional[str] = None) :    
         results = self.collection.find(
             {
-                "asset_project_id": ObjectId(asset_project_id) if isinstance(asset_project_id, str) else asset_project_id
+                "asset_project_id": ObjectId(asset_project_id) if isinstance(asset_project_id, str) else asset_project_id ,
+                "asset_type": asset_type #if asset_type is not None else {"$exists": True}
             }
         ).to_list(length=None)  
+        # he not add this line
+        # assets = []
+        # async for result in results:
+            # assets.append(Asset(**result))
 
-        assets = []
-        async for result in results:
-            assets.append(Asset(**result))
-
-        return assets          
+        # return assets          

@@ -7,11 +7,11 @@ class  ProcessRequest(BaseModel):
 
     # project_id: str
 
-    file_id: str
+    file_id: str  = ""
 
-    chunk_size: Optional[int] = 100  
+    chunk_size: int = 100  
 
-    overlap_size: Optional[int] = 20
+    overlap_size: int = 20
 
-    do_reset : Optional[int] = 0 
+    do_reset : int = 0 
 

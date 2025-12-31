@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 
 class ProjectDBScheme(BaseModel):
 
-    id : Optional[ObjectId] = Field(None , alias="_id")
+    id : Optional[ObjectId] = Field(default=None , alias="_id")
     project_id : str =  Field(... , min_length=1)
 
 

@@ -10,9 +10,9 @@ class Asset(BaseModel):
     asset_project_id : ObjectId 
     asset_type : str = Field(... , min_length=1)
     asset_name : str = Field(... , min_length=1)
-    asset_size : int = Field(ge=0, default=None)  # size in bytes
-    asset_config : dict = Field(default=dict)
-    asset_push_at : datetime  =  Field(default=datetime.utcnow)
+    asset_size : Optional[int] = Field(ge=0, default=None)  # size in bytes
+    asset_config : dict = Field(default_factory=dict)
+    asset_push_at : datetime  =  Field(default_factory=datetime.utcnow)
     
 
 

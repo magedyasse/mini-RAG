@@ -44,10 +44,17 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
                 content={"message": message}    
             )
 
+        # Check filename is not None
+        if not file.filename:
+            return JSONResponse(
+                status_code= status.HTTP_400_BAD_REQUEST,
+                content={"message": "Filename is required"}    
+            )
+
         # Get project path
         project_dir_path = ProjectController().get_project_path(project_id=project_id)
         file_path, file_id = data_controller.generate_unique_filepath(
-            original_filename=file.filename ,
+            original_filename=file.filename,
             project_id=project_id
         )
 
@@ -71,7 +78,7 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
         )
 
         asset_resource = Asset(
-           asset_project_id = project.id,
+           asset_project_id = project.id,  # type: ignore
            asset_type = AssetTypeEnum.FILE.value,
            asset_name = file_id, 
            asset_size = os.path.getsize(file_path),
@@ -85,8 +92,8 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
                 status_code= status.HTTP_200_OK,
                 content={
                     "message": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
-                    # "file_id": file_id,
-                    "file_id": str(asset_record.id)
+                    "file_id": str(asset_record.id),
+                    "file_name": os.path.basename(file_path)
                 }  
             )           
 
@@ -94,8 +101,9 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
 
 @data_router.post("/process/{project_id}")
 async def process_data(project_id: str, process_request: ProcessRequest, request: Request):  # Fixed: renamed ProcessRequest param and added Request param
+    
     # Your processing logic here
-    file_id =  process_request.file_id
+    file_id =  process_request.file_id # 
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
@@ -107,13 +115,32 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
             project_id=project_id
         )
 
-
-
-
     process_controller = ProcessController(project_id=project_id)   
 
     file_content = process_controller.get_file_content(file_id=file_id)
     
+    if file_content is None:
+        return JSONResponse(
+            status_code= status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": ResponseSignal.PROCESSING_FAILED.value
+            }    
+        )
+    
+    project_files_ids = []
+    if process_request.file_id:
+        project_files_ids = [process_request.file_id]
+    else :
+        asset_model = await AssetModel.create_instance(
+            db_client=request.app.database
+        )
+        project_files_ids = await asset_model.get_all_project_assets(
+            asset_project_id=project.id,  # type: ignore
+            asset_type=AssetTypeEnum.FILE.value 
+        )
+
+
+
     file_chunks = process_controller.process_file_content(
         file_content=file_content,
         file_id=file_id,
@@ -137,7 +164,7 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
             chunk_text=chunk.page_content,
             chunk_metadata=chunk.metadata,
             chunk_order=i+1,
-            chunk_project_id= project.id,  # Fixed: ProjectDBScheme has '_id', not 'id'
+            chunk_project_id= project.id,  # type: ignore
         )
         for i,chunk in  enumerate(file_chunks)
     ]
@@ -147,20 +174,20 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
     )    
     
     if do_reset==1 :
-        deleted_count = await chunk_model.delete_chunks_by_project_id(
-            project_id=project.id  # Fixed: ProjectDBScheme has '_id', not 'id'
+         _ = await chunk_model.delete_chunks_by_project_id(
+            project_id=project.id  # type: ignore
         )
         # logger.info(f"Deleted {deleted_count} chunks for project_id: {project_id}")
 
 
     no_records = await chunk_model.insert_many_chunks(
         data_chunks=file_chunks_records,
-       
     )
+    # no_files += 1
 
     return JSONResponse(
          content={
             "message": ResponseSignal.PROCESSING_SUCCESS.value,
-            "records_inserted": no_records
+            "records_inserted": no_records ,
          }
     )
