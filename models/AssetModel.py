@@ -41,15 +41,26 @@ class AssetModel(BaseDataModel):
         return asset      
 
     async def get_all_project_assets(self , asset_project_id:str, asset_type: Optional[str] = None) :    
-        results = self.collection.find(
+        results = await self.collection.find(
             {
                 "asset_project_id": ObjectId(asset_project_id) if isinstance(asset_project_id, str) else asset_project_id ,
                 "asset_type": asset_type #if asset_type is not None else {"$exists": True}
             }
         ).to_list(length=None)  
-        # he not add this line
-        # assets = []
-        # async for result in results:
-            # assets.append(Asset(**result))
 
-        # return assets          
+        return [
+            Asset(**record) 
+            for record in results
+        ]     
+
+    async def get_asset_record(self , asset_project_id:str, asset_name: str) -> Optional[Asset] :    
+        result = await self.collection.find_one(
+            {
+                "asset_project_id": ObjectId(asset_project_id) if isinstance(asset_project_id, str) else asset_project_id ,
+                "asset_name": asset_name 
+            }
+        )  
+
+        if result:
+            return Asset(**result)
+        return None     

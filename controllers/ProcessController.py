@@ -29,6 +29,9 @@ class ProcessController(BaseController):
                 file_id
                 )
                 
+            if not os.path.exists(file_path):
+                return None
+                
             if file_ext == ProcessingEnum.PDF.value:
                return PyMuPDFLoader(file_path)
                
