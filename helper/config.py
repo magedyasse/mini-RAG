@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     GENERATION_DAFAULT_MAX_TOKENS : int = 0
     GENERATION_DAFAULT_TEMPERATURE: float = 0.0
 
+    VECTOER_DB_BACKEND : str = ""
+    VECTOER_DB_PATH : str = ""
+    VECTOER_DB_DISTANCE_METHOD : str = ""
+
     class Config:
         env_file = ".env"
 
