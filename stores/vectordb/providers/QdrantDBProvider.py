@@ -1,10 +1,9 @@
 from ..VectoerDBInterface import VectorDBInterface
-from qdrant_client import QdrantClient, models # type: ignore
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
 from ..VectoerDBEnums import DistanceMethodEnums
 import logging
-from typing import List, Optional
-
-
+from typing import List, Optional, Union, Dict, Any
 
 
 class QdrantDBProvider(VectorDBInterface):
@@ -16,10 +15,20 @@ class QdrantDBProvider(VectorDBInterface):
         self.client: Optional[QdrantClient] = None
         self.distance_method: Optional[models.Distance] = None
 
-        if distance_method == DistanceMethodEnums.COSINE.value:
+        # Case-insensitive comparison
+        distance_method_lower = distance_method.lower()
+        
+        if distance_method_lower == DistanceMethodEnums.COSINE.value.lower():
             self.distance_method = models.Distance.COSINE
-        elif distance_method == DistanceMethodEnums.DOT.value:
-            self.distance_method = models.Distance.DOT 
+        elif distance_method_lower == DistanceMethodEnums.DOT.value.lower():
+            self.distance_method = models.Distance.DOT
+        elif distance_method_lower == DistanceMethodEnums.EUCLIDEAN.value.lower():
+            self.distance_method = models.Distance.EUCLID
+        elif distance_method_lower == DistanceMethodEnums.MANHATTAN.value.lower():
+            self.distance_method = models.Distance.MANHATTAN
+        else:
+            # Default to COSINE if not recognized
+            self.distance_method = models.Distance.COSINE
         
         self.logger = logging.getLogger(__name__)
 
@@ -36,19 +45,19 @@ class QdrantDBProvider(VectorDBInterface):
             raise RuntimeError("Client not connected. Call connect() first.")
         return self.client.collection_exists(collection_name=collection_name) 
     
-    def list_all_collections(self) -> list[str] | None:
+    def list_all_collections(self) -> Optional[List[str]]:
         if self.client is None:
             raise RuntimeError("Client not connected. Call connect() first.")
         return self.client.get_collections()
     
 
-    def get_collection_info(self, collection_name: str) -> dict | None:
+    def get_collection_info(self, collection_name: str) -> Optional[dict]:
         if self.client is None:
             raise RuntimeError("Client not connected. Call connect() first.")
-        return self.client.get_collection_info(collection_name)
+        return self.client.get_collection(collection_name=collection_name)
     
 
-    def delete_collection(self, collection_name: str) -> bool | None:
+    def delete_collection(self, collection_name: str) -> Optional[bool]:
 
         if self.client is None:
             raise RuntimeError("Client not connected. Call connect() first.")
@@ -62,7 +71,7 @@ class QdrantDBProvider(VectorDBInterface):
 
     def create_collection(self,  collection_name: str,
                                  embedding_size: int,
-                                 do_reset : bool = False) -> bool | None:
+                                 do_reset : bool = False) -> Optional[bool]:
 
         if self.client is None:
             raise RuntimeError("Client not connected. Call connect() first.")
@@ -84,8 +93,8 @@ class QdrantDBProvider(VectorDBInterface):
     def insert_one(self, collection_name: str,
                            text : str,
                            vectoer: List[float],
-                           metadata: dict | None = None,
-                           record_id : str | None = None) -> str | None:  # Fixed: Added return type to match interface
+                           metadata: Optional[dict] = None,
+                           record_id : Optional[str] = None) -> Optional[str]:  # Fixed: Added return type to match interface
        
 
         if self.client is None:
@@ -125,9 +134,9 @@ class QdrantDBProvider(VectorDBInterface):
     def insert_many(self ,  collection_name : str,
                             texts      : list,
                             vectoers   : List,
-                            metadata   : list | None = None,
-                            record_ids : list | None = None,
-                            batch_size : int = 50) -> List[str] | None:  # Fixed: Added return type to match interface
+                            metadatas   : Optional[list] = None,
+                            record_ids : Optional[list] = None,
+                            batch_size : int = 50) -> Optional[List[str]]:  # Fixed: Added return type to match interface
         
         if self.client is None: 
             raise RuntimeError("Client not connected. Call connect() first.")
@@ -138,8 +147,8 @@ class QdrantDBProvider(VectorDBInterface):
         
 
 
-        if metadata is None:
-            metadata = [None] * len(texts)
+        if metadatas is None:
+            metadatas = [None] * len(texts)
 
         # Fixed: Generate string IDs instead of None values
         if record_ids is None:
@@ -155,7 +164,7 @@ class QdrantDBProvider(VectorDBInterface):
 
           batch_vectors = vectoers[i: batch_end]
 
-          batch_metadata = metadata[i: batch_end]
+          batch_metadatas = metadatas[i: batch_end]
 
           batch_ids = record_ids[i: batch_end]  # Get batch of record IDs
 
@@ -166,7 +175,7 @@ class QdrantDBProvider(VectorDBInterface):
                   vector=batch_vectors[x],
                   payload={
                       "text": batch_texts[x],
-                      "metadata": batch_metadata[x]
+                      "metadata": batch_metadatas[x]
                   },
                 ) 
 
@@ -190,7 +199,7 @@ class QdrantDBProvider(VectorDBInterface):
     
     def search_by_vector(self, collection_name: str,
                                 vector: List,
-                                limit: int = 5,) -> List[dict] | None:
+                                limit: int = 5,) -> Optional[List[dict]]:
         
         # Added proper error handling and null checks                                      
         if self.client is None:

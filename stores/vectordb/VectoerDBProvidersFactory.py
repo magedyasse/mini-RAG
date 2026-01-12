@@ -11,14 +11,15 @@ class VectoerDBProvidersFactory:
       self.base_controller = BaseController()
 
     def create(self , provider:str) :
-        if provider == VectoerDBEnums.QDRANT.value:
-           db_path = self.base_controller.get_database_path(db_name=self.config.VECTOER_DB_PATH)
+        if provider.lower() == VectoerDBEnums.QDRANT.value.lower():
+           db_path = self.base_controller.get_database_path(db_name=self.config.VECTOR_DB_PATH)
 
            return QdrantDBProvider(
                 db_path=db_path,
-                distance_method=self.config.VECTOER_DB_DISTANCE_METHOD
+                distance_method=self.config.VECTOR_DB_DISTANCE_METHOD
            )
-        return None
+        
+        raise ValueError(f"Unsupported vector DB provider: {provider}")
        
         
 

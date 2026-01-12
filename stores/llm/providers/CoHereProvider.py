@@ -1,5 +1,6 @@
-from  ...LLMInterFace import LLMInterFace
-from ...LLMEnums import CohereEnums , DocumentTypeEnums
+from  ..LLMInterFace import LLMInterFace
+from  ..LLMEnums import CohereEnums , DocumentTypeEnums
+from typing import List, Optional, Union
 import cohere
 from cohere.types import Message
 import logging
@@ -43,7 +44,7 @@ class CohereProvider(LLMInterFace):
                 return text[:self.default_input_max_characters].strip()      
 
 
-    def generate_text(self, prompt: str, chat_history: list[Message] | None = None, max_output_tokens: int | None = None, temperature: float | None = None):      # type: ignore
+    def generate_text(self, prompt: str, chat_history: Optional[List[Message]] = None, max_output_tokens: Optional[int] = None, temperature: Optional[float] = None):      # type: ignore
 
            
             if not self.client :
@@ -72,7 +73,7 @@ class CohereProvider(LLMInterFace):
             
             return response.text
     
-    def embed_text(self, text: str, document_type: str | None = None) -> list[float] | None:
+    def embed_text(self, text: str, document_type: Optional[str] = None) -> Optional[List[float]]:
             
 
             if not self.client :

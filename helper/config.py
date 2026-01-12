@@ -16,24 +16,24 @@ class Settings(BaseSettings):
     MONGODB_DATABASE: str = ""
 
 
-    GENRATION_BACKEND : str = ""
+    GENERATION_BACKEND : str = ""
     EMBEDDING_BACKEND : str = ""
 
    
     OPENAI_API_URL : str = ""    
     COHERE_API_KEY : str = ""
 
-    GENRATION_MODEL_ID : str = ""
+    GENERATION_MODEL_ID : str = ""
     EMBEDDING_MODEL_ID : str = ""
     EMBEDDING_MODEL_SIZE: int = 0
     
-    INPUT_DAFAULT_MAX_CHARACTERS : int = 0
-    GENERATION_DAFAULT_MAX_TOKENS : int = 0
-    GENERATION_DAFAULT_TEMPERATURE: float = 0.0
+    INPUT_DEFAULT_MAX_CHARACTERS : int = 0
+    GENERATION_DEFAULT_MAX_TOKENS : int = 0
+    GENERATION_DEFAULT_TEMPERATURE: float = 0.0
 
-    VECTOER_DB_BACKEND : str = ""
-    VECTOER_DB_PATH : str = ""
-    VECTOER_DB_DISTANCE_METHOD : str = ""
+    VECTOR_DB_BACKEND : str = ""
+    VECTOR_DB_PATH : str = ""
+    VECTOR_DB_DISTANCE_METHOD : str = ""
 
     class Config:
         env_file = ".env"
