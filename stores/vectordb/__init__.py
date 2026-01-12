@@ -1,1 +1,1 @@
-from VectoerDBInterface import VectorDBInterface
+from .VectoerDBInterface import VectorDBInterface

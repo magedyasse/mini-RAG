@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+from typing import List, Optional, Union
 from openai.types.chat import ChatCompletionMessageParam
 
 class LLMInterFace(ABC):
@@ -16,11 +17,11 @@ class LLMInterFace(ABC):
 
 
     @abstractmethod
-    def generate_text(self, prompt: str, chat_history: list[str], max_output_tokens: int | None = None, temperature: float | None = None):
+    def generate_text(self, prompt: str, chat_history: List[str], max_output_tokens: Optional[int] = None, temperature: Optional[float] = None):
         pass
 
     @abstractmethod 
-    def embed_text(self, text: str, document_type: str | None = None) -> list[float] | None:
+    def embed_text(self, text: str, document_type: Optional[str] = None) -> Optional[List[float]]:
         pass
 
     @abstractmethod

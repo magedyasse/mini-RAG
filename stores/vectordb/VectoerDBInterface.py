@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional, Union, Dict, Any
 
 
 
@@ -11,48 +11,48 @@ class VectorDBInterface(ABC):
         pass
 
     @abstractmethod
-    def is_collection_exists(self, collection_name: str) -> bool | None:
+    def is_collection_exists(self, collection_name: str) -> Optional[bool]:
         pass
 
     @abstractmethod
-    def list_all_collections(self) -> List[str] | None:
+    def list_all_collections(self) -> Optional[List[str]]:
         pass
 
     @abstractmethod
-    def get_collection_info(self, collection_name: str) -> dict  | None:
+    def get_collection_info(self, collection_name: str) -> Optional[dict]:
         pass    
 
     @abstractmethod
     def create_collection(self, collection_name: str,
                                 embedding_size : int  , 
-                                do_reset : bool = False) -> bool | None:
+                                do_reset : bool = False) -> Optional[bool]:
         pass
 
     @abstractmethod
-    def delete_collection(self, collection_name: str) -> bool   | None:
+    def delete_collection(self, collection_name: str) -> Optional[bool]:
         pass
 
     @abstractmethod
     def insert_one(self, collection_name: str,
                            text : str,
                            vectoer: List[float],
-                           metadata: dict | None = None,
-                           record_id : str | None = None) -> str | None:
+                           metadata: Optional[dict] = None,
+                           record_id : Optional[str] = None) -> Optional[str]:
         pass
         
     @abstractmethod
     def insert_many(self ,  collection_name : str,
                             texts      : list,
                             vectoers   : List,
-                            metadata   : list | None = None,
-                            record_ids : list | None = None,
-                            batch_size : int = 50) -> List[str] | None:
+                            metadatas   : Optional[list] = None,
+                            record_ids : Optional[list] = None,
+                            batch_size : int = 50) -> Optional[List[str]]:
         pass
 
     @abstractmethod
     def search_by_vector(self, collection_name: str,
                                 vector: List,
-                                limit: int = 5,) -> List[dict] | None:
+                                limit: int = 5,) -> Optional[List[dict]]:
                                             
         pass
  

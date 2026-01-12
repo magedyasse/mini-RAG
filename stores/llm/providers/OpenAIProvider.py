@@ -1,13 +1,14 @@
-from  ...LLMInterFace import LLMInterFace
-from  ...LLMEnums import OpenAIEnums
+from  ..LLMInterFace import LLMInterFace
+from  ..LLMEnums import OpenAIEnums
 from  openai import OpenAI
 from  openai.types.chat import ChatCompletionMessageParam
+from typing import List, Optional, Union
 import logging
 
 class OpenAIProvider(LLMInterFace):
 
 
-        def __init__(self, api_key: str ,  api_url: str  | None = None,
+        def __init__(self, api_key: str ,  api_url: Optional[str] = None,
                         default_input_max_characters: int = 1000 ,
                         defalut_generation_max_outputtokens: int = 1000,
                         defalut_generation_temperature: float = 0.1,
@@ -25,10 +26,16 @@ class OpenAIProvider(LLMInterFace):
             self.embedding_model_id = None
             self.embedding_size = None
 
-            self.client = OpenAI(
+            # Initialize client with only api_key to avoid httpx compatibility issues
+            if self.api_url:
+                self.client = OpenAI(
                     api_key=self.api_key,
-                    api_url=self.api_url   # pyright: ignore[reportCallIssue]
-              )
+                    base_url=self.api_url
+                )
+            else:
+                self.client = OpenAI(
+                    api_key=self.api_key
+                )
             
             self.logger = logging.getLogger(__name__)
 
@@ -42,9 +49,9 @@ class OpenAIProvider(LLMInterFace):
         def process_text(self, text: str) -> str:
                 return text[:self.default_input_max_characters].strip()
 
-        def generate_text(self, prompt: str, chat_history: list[ChatCompletionMessageParam],   # pyright: ignore[reportIncompatibleMethodOverride]
-                                max_output_tokens: int | None = None, 
-                                temperature: float | None = None):    
+        def generate_text(self, prompt: str, chat_history: List[ChatCompletionMessageParam],   # pyright: ignore[reportIncompatibleMethodOverride]
+                                max_output_tokens: Optional[int] = None, 
+                                temperature: Optional[float] = None):    
                 
           
                 if not self.client :
@@ -77,7 +84,7 @@ class OpenAIProvider(LLMInterFace):
                     
                 return response.choices[0].message.content  
         
-        def embed_text(self, text: str ,document_type: str | None = None) :
+        def embed_text(self, text: str ,document_type: Optional[str] = None) :
                
                 if not self.client :
                    self.logger.error("OpenAI client is not initialized.")
