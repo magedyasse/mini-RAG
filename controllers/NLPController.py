@@ -9,13 +9,14 @@ import json
 
 class NLPController(BaseController):
 
-    def __init__(self , vectoerdb_client    , embedding_client  , generation_client ) :
+    def __init__(self , vectoerdb_client    , embedding_client  , generation_client ,template_parser) :
         super().__init__()
 
 
         self.vectoerdb_client = vectoerdb_client
         self.embedding_client = embedding_client
         self.generation_client = generation_client
+        self.template_parser = template_parser
 
     def   create_collection_name(self , project_id:str) -> str:
         return f"project_{project_id}_collection"  
@@ -87,8 +88,62 @@ class NLPController(BaseController):
             limit=top_k
         )
 
-        if not results :
-            return False
+        if results is None:
+            return None
         
-        return json.loads(json.dumps(results, default=lambda o: o.__dict__ ))
+        return results
             
+    def answer_rag_question(self , project : ProjectModel  , query_text: str , top_k : int =10) : 
+        
+        answer , full_prompt , chat_history = None , None , None
+       
+        # step 1 : retrieve related documents
+        retrieved_docs = self.search_vector_db_collection(
+            project=project,
+            query_text=query_text,
+            top_k=top_k
+        )
+        
+        if not retrieved_docs or len(retrieved_docs)  == 0 :
+            return answer , full_prompt , chat_history
+        
+        # step 2 : Construct LLM Prompt 
+        
+        system_prompt = self.template_parser.get("rag" ,"system_prompt")
+        
+            
+        documents_prompts = "\n".join([   
+            self.template_parser.get("rag" ,"document_prompt"  ,{
+                    "doc_num" : idx + 1 ,
+                    "chunk_text" : doc.text
+            })               
+            for idx, doc in enumerate(retrieved_docs)                
+        ])
+        
+        
+        footer_prompt = self.template_parser.get("rag" ,"footer_prompt" ,{
+            "query" : query_text
+        })
+        
+        chat_history = [
+            
+            self.generation_client.construct_prompt(
+                prompt = system_prompt ,
+                role = self.generation_client.enums.SYSTEM.value,
+            )
+        ]
+        
+        full_prompt = "\n\n".join([documents_prompts,footer_prompt])
+        
+        answer =  self.generation_client.generate_text(
+            prompt = full_prompt ,
+            chat_history = chat_history
+        )
+        
+        return answer , full_prompt , chat_history
+        
+        
+          
+        
+        
+         

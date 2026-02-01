@@ -27,7 +27,8 @@ class CohereProvider(LLMInterFace):
             self.embedding_size = None
 
             self.client = cohere.Client(self.api_key)
-
+             
+            self.enums =  CohereEnums
             self.logger = logging.getLogger(__name__)
 
 

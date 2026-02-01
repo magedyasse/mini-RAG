@@ -2,6 +2,7 @@ from ..VectoerDBInterface import VectorDBInterface
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from ..VectoerDBEnums import DistanceMethodEnums
+from models.db_schemes.data_chunk import  RetrievedDocument
 import logging
 from typing import List, Optional, Union, Dict, Any
 
@@ -199,7 +200,7 @@ class QdrantDBProvider(VectorDBInterface):
     
     def search_by_vector(self, collection_name: str,
                                 vector: List,
-                                limit: int = 5,) -> Optional[List[dict]]:
+                                limit: int = 5,) -> Optional[List[RetrievedDocument]]:
         
         # Added proper error handling and null checks                                      
         if self.client is None:
@@ -210,11 +211,22 @@ class QdrantDBProvider(VectorDBInterface):
             return None
             
         try:
-            return self.client.search(
+            results = self.client.search(
                 collection_name=collection_name,
                 query_vector=vector,
                 limit=limit
             )
+            
+            if not results or len(results) == 0:
+                return []
+            
+            return [
+                RetrievedDocument(**{
+                    "text":  result.payload["text"],
+                    "score": result.score
+                })
+                for result in results
+            ]
         except Exception as e:
             self.logger.error(f"Error searching in collection {collection_name}: {e}")
             return None

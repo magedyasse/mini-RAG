@@ -5,13 +5,17 @@ from helper.config import get_settings
 from typing import Any
 from stores.llm.LLMProviderFactory import LLMProviderFactory 
 from stores.vectordb.VectoerDBProvidersFactory import VectoerDBProvidersFactory   
-
+from stores.llm.templates.templates_parser import TemplatesParser 
 
 app = FastAPI()
 
 # Type hints for custom app attributes
 app.mongodb_client: Any = None  # type: ignore
 app.database: Any = None  # type: ignore
+app.generation_client: Any = None  # type: ignore
+app.embedding_client: Any = None  # type: ignore
+app.vectoerdb_client: Any = None  # type: ignore
+app.template_parser: Any = None  # type: ignore
 
 # @app.on_event("startup")
 async def startup_span():
@@ -40,8 +44,13 @@ async def startup_span():
     )  
 
     app.vectoerdb_client.connect()  # type: ignore
-
-
+    
+    
+    app.template_parser = TemplatesParser ( # type: ignore  
+        language = settings.PRIMARY_LANG,
+        default_language = settings.DEFAULT_LANG,
+    )
+    
 
 # @app.on_event("shutdown")
 async def shutdown_span():
