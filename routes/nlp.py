@@ -46,7 +46,8 @@ async def index_project(request: Request ,project_id: str , push_request: PushRe
     nlp_controller = NLPController(
         vectoerdb_client=request.app.vectoerdb_client,
         embedding_client=request.app.embedding_client,
-        generation_client=request.app.generation_client
+        generation_client=request.app.generation_client,
+        template_parser=request.app.template_parser
     )
 
 
@@ -114,7 +115,8 @@ async def get_project_index_info(request: Request , project_id: str) :
     nlp_controller = NLPController(
         vectoerdb_client=request.app.vectoerdb_client,
         embedding_client=request.app.embedding_client,
-        generation_client=request.app.generation_client
+        generation_client=request.app.generation_client,
+        template_parser= request.app.template_parser
     )
 
     collection_info = nlp_controller.get_vector_db_collection_info(
@@ -132,6 +134,7 @@ async def get_project_index_info(request: Request , project_id: str) :
 
 @nlp_router.post("/index/search/{project_id}")
 async def search_index(request: Request , project_id: str, search_request: SearchRequest):
+    
     project_model = await ProjectModel.create_instance(# type: ignore
         db_client=request.app.database  
     )
@@ -143,16 +146,20 @@ async def search_index(request: Request , project_id: str, search_request: Searc
     nlp_controller = NLPController(
         vectoerdb_client=request.app.vectoerdb_client,
         embedding_client=request.app.embedding_client,
-        generation_client=request.app.generation_client
+        generation_client=request.app.generation_client,
+        template_parser=request.app.template_parser 
     )
 
 
-    resluts = nlp_controller.search_vector_db_collection(
+    results = nlp_controller.search_vector_db_collection(
         project=project,  # type: ignore
         query_text=search_request.query_text,
-        top_k=search_request.top_k
+        top_k=search_request.top_k # type: ignore
     )
-    if resluts is None :
+    
+    logging.info(f"Search results type: {type(results)}, value: {results}")
+    
+    if results is None or results is False:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -162,17 +169,69 @@ async def search_index(request: Request , project_id: str, search_request: Searc
             }
         )
     
+    serialized_results = [result.model_dump() for result in results]
+    logging.info(f"Serialized results: {serialized_results}")
+    
+    response_data = {
+        "signal": ResponseSignal.VECTOR_DB_SUCCESS.value,
+        "results": serialized_results
+    }
+    
+    logging.info(f"Response data: {response_data}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=response_data
+    )
+
+@nlp_router.post("/index/answer/{project_id}")
+async def answer_rag(request : Request , project_id :str , search_request: SearchRequest):
+    
+    
+    project_model = await ProjectModel.create_instance(# type: ignore
+        db_client=request.app.database  
+    )
+    
+    project  =  await project_model.get_project_or_create_one(
+        project_id=project_id 
+        )
+    
+    nlp_controller = NLPController(
+        vectoerdb_client=request.app.vectoerdb_client,
+        embedding_client=request.app.embedding_client,
+        generation_client=request.app.generation_client,
+        template_parser=request.app.template_parser 
+    )
+    
+    answer , full_prompt , chat_history  = nlp_controller.answer_rag_question(
+        project = project , # type: ignore
+        query_text = search_request.query_text ,
+        top_k = search_request.top_k # type: ignore
+    )
+    
+    if not answer :
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                
+                "signal": ResponseSignal.RAG_ANSWER_ERROR.value
+
+            }
+        )
+        
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "signal": ResponseSignal.VECTOR_DB_SUCCESS.value,
-            "results": resluts
-        }
-    )
+                
+                "signal": ResponseSignal.RAG_ANSWER_SUCCESS.value,
+                "answer" : answer ,
+                "full_prompt" : full_prompt ,
+                "chat_history" : chat_history
 
-    
+            }
         
-    
+        
+    )    
     
 
 

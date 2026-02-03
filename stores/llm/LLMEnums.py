@@ -11,7 +11,7 @@ class LLMEnums(str, Enum):
 
 class OpenAIEnums(Enum):
 
-      SYSTEM = "system"
+      SYSTEM = "SYSTEM"
       USER = "user"
       ASSISTANT = "assistant"
       

@@ -27,6 +27,9 @@ class ResponseSignal(str, Enum):
 
     VECTOR_DB_SUCCESS="VECTOR_DB_SUCCESS"
     VECTOR_DB_ERROR="VECTOR_DB_ERROR"
+    
+    RAG_ANSWER_ERROR = "rag_answer_error"
+    RAG_ANSWER_SUCCESS = "rag_answer_success"
 
 
  
