@@ -1,28 +1,43 @@
 from fastapi import FastAPI
 from routes import base ,data ,nlp
-from motor.motor_asyncio import AsyncIOMotorClient
+# from motor.motor_asyncio import AsyncIOMotorClient
 from helper.config import get_settings
 from typing import Any
 from stores.llm.LLMProviderFactory import LLMProviderFactory 
 from stores.vectordb.VectoerDBProvidersFactory import VectoerDBProvidersFactory   
 from stores.llm.templates.templates_parser import TemplatesParser 
-
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 app = FastAPI()
 
+
 # Type hints for custom app attributes
-app.mongodb_client: Any = None  # type: ignore
-app.database: Any = None  # type: ignore
+# app.db_client: Any = None  # type: ignore
+# app.database: Any = None  # type: ignore
+app.db_engine: Any = None  # type: ignore
+app.db_client: Any = None  # type: ignore
 app.generation_client: Any = None  # type: ignore
 app.embedding_client: Any = None  # type: ignore
 app.vectoerdb_client: Any = None  # type: ignore
 app.template_parser: Any = None  # type: ignore
+app.db_engine: Any = None  # type: ignore
 
 # @app.on_event("startup")
 async def startup_span():
 
     settings = get_settings()
-    app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URI)  # type: ignore
-    app.database = app.mongodb_client[settings.MONGODB_DATABASE]  # type: ignore
+    
+    postgres_conn = f"postgresql+asyncpg://{settings.POSTGRES_USERNAME}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_MAIN_DATABASE}"
+    
+    app.db_engine = create_async_engine(postgres_conn)  # type: ignore
+    
+    app.db_client = sessionmaker(  # type: ignore
+        app.db_engine, expire_on_commit=False, class_=AsyncSession # type: ignore
+    )
+    
+    
+    # app.db_client = AsyncIOMotorClient(settings.MONGODB_URI)  # type: ignore
+    # app.database = app.db_client[settings.MONGODB_DATABASE]  # type: ignore
     
 
     llm_provider_factory = LLMProviderFactory(settings)
@@ -54,7 +69,7 @@ async def startup_span():
 
 # @app.on_event("shutdown")
 async def shutdown_span():
-    app.mongodb_client.close()  # type: ignore    
+    await app.db_engine.dispose()  # type: ignore    
     app.vectoerdb_client.disconnect()  # type: ignore
 
 
