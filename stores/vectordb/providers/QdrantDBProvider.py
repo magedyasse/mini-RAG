@@ -1,10 +1,11 @@
 from ..VectoerDBInterface import VectorDBInterface
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
+from qdrant_client import QdrantClient  # type: ignore
+from qdrant_client.http import models # type: ignore
+from qdrant_client import models, QdrantClient # type: ignore
 from ..VectoerDBEnums import DistanceMethodEnums
-from models.db_schemes.data_chunk import  RetrievedDocument
+from models.db_schemes import  RetrievedDocument
 import logging
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional
 
 
 class QdrantDBProvider(VectorDBInterface):

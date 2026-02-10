@@ -25,6 +25,7 @@ class Asset(SQLALchemy_Base):
     asset_project_id = Column(Integer, ForeignKey("projects.project_id"), nullable=False)
     
     project  = relationship("Project", back_populates="assets")
+    chunks = relationship("Chunk", back_populates="asset")
     
     __table_args__ = (
         

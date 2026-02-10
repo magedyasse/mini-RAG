@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Dict, Any
-from models.db_schemes.data_chunk import RetrievedDocument
+from models.db_schemes import RetrievedDocument
 
 
 

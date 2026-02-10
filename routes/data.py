@@ -22,12 +22,12 @@ data_router = APIRouter(
 
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request : Request , project_id: str, file: UploadFile ,
+async def upload_data(request : Request , project_id: int, file: UploadFile ,
         app_settings : Settings = Depends(get_settings)):
 
 
         project_model = await ProjectModel.create_instance(
-            db_client=request.app.database  # Fixed: was mongodb_client (MongoClient), should be database (Database object)
+            db_client=request.app.db_client  
         )
 
         project = await project_model.get_project_or_create_one(
@@ -78,7 +78,7 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
         )
 
         asset_resource = Asset(
-           asset_project_id = project.id,  # type: ignore
+           asset_project_id = project.project_id,  # type: ignore
            asset_type = AssetTypeEnum.FILE.value,
            asset_name = file_id, 
            asset_size = os.path.getsize(file_path),
@@ -92,7 +92,7 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
                 status_code= status.HTTP_200_OK,
                 content={
                     "message": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
-                    "file_id": str(asset_record.id),
+                    "file_id": str(asset_record.asset_id),
                     "file_name": os.path.basename(file_path)
                 }  
             )           
@@ -101,7 +101,7 @@ async def upload_data(request : Request , project_id: str, file: UploadFile ,
 
 
 @data_router.post("/process/{project_id}")
-async def process_data(project_id: str, process_request: ProcessRequest, request: Request):  # Fixed: renamed ProcessRequest param and added Request param
+async def process_data(project_id: int, process_request: ProcessRequest, request: Request):  # Fixed: renamed ProcessRequest param and added Request param
     
     # Your processing logic here
     file_id =  process_request.file_id # 
@@ -123,7 +123,7 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
     project_files_ids = {}
     if process_request.file_id:
         asset_model = await asset_model.get_asset_record(
-            asset_project_id=project.id,  # type: ignore    
+            asset_project_id=   project.project_id,  # type: ignore    
             asset_name=process_request.file_id
         )
         if asset_model is None:
@@ -134,17 +134,17 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
                 }    
             )
         project_files_ids = {
-             asset_model.id: asset_model.asset_name
+             asset_model.asset_id: asset_model.asset_name
              }
         
     else :
         
         project_files = await asset_model.get_all_project_assets(
-            asset_project_id=project.id,  # type: ignore
+            asset_project_id=project.project_id,  # type: ignore
             asset_type=AssetTypeEnum.FILE.value 
         )
         project_files_ids = {
-            record.id : record.asset_name
+            record.asset_project_id : record.asset_name
             for record in project_files # type: ignore
         }
 
@@ -168,12 +168,12 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
 
     if do_reset==1 :
             _ = await chunk_model.delete_chunks_by_project_id(
-                project_id=project.id  # type: ignore
+                project_id=project.project_id  # type: ignore
             )
 
     for  asset_id ,file_id in project_files_ids.items():
 
-        file_content = process_controller.get_file_content(file_id=file_id)
+        file_content = process_controller.get_file_content(file_id=file_id) # type: ignore
         
         # if file_content is None:
         #     return JSONResponse(   
@@ -190,7 +190,7 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
 
         file_chunks = process_controller.process_file_content(
             file_content=file_content, 
-            file_id=file_id,
+            file_id=file_id,  # type: ignore
             chunk_size=chunk_size,
             overlap_size=overlap_size
         )
@@ -210,7 +210,7 @@ async def process_data(project_id: str, process_request: ProcessRequest, request
                 chunk_text=chunk.page_content,
                 chunk_metadata=chunk.metadata,
                 chunk_order=i+1,
-                chunk_project_id= project.id,  # type: ignore
+                chunk_project_id= project.project_id,  # type: ignore
                 chunk_asset_id = asset_id
             )
             for i,chunk in  enumerate(file_chunks)
